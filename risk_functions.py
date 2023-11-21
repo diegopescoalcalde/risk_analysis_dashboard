@@ -25,11 +25,12 @@ def compute_returns(tickers, close_prices):
       xaxis_title="Date",
       yaxis_title="Close Price",
       legend=dict(title='Legend',
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1))
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="left",
+            x=0.01
+            ))
 
 
   # Line plot returns
@@ -42,11 +43,12 @@ def compute_returns(tickers, close_prices):
       xaxis_title="Date",
       yaxis_title="Returns",
       legend=dict(title='Legend',
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1))
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="left",
+            x=0.01
+            ))
 
   # Histogram of returns
   fig_returns_hist = px.histogram(returns,
@@ -57,11 +59,12 @@ def compute_returns(tickers, close_prices):
   fig_returns_hist.update_layout(title=f"{tickers} Returns Distribution",
       xaxis_title="Returns",
       legend=dict(title='Legend',
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1))
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="left",
+            x=0.01
+            ))
   
   # Shapiro-Wilk normality test
   normality_test = shapiro(returns)
@@ -153,11 +156,13 @@ def plot_var(returns, var_list, error_list):
       xaxis_title="Date",
       yaxis_title="Returns",
       legend=dict(title='Legend',
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1))
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="left",
+            x=0.01
+            ))
+  
   
   
   fig_percentage_error = go.Figure()
@@ -174,11 +179,12 @@ def plot_var(returns, var_list, error_list):
       xaxis_title="Date",
       yaxis_title="Error Percentage (%)",
       legend=dict(title='Legend',
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1))
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="left",
+            x=0.01
+            ))
 
 
   return returns, fig_percentage_error, fig_go

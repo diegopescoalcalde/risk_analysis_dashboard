@@ -11,18 +11,22 @@ import risk_functions
 
 def home():
     st.title('Home')
-    st.header('Welcome! Please Read me!')
+    st.header('Welcome! Please read me!')
     st.markdown('''
             Thank you for accessing this simple risk analysis dashboard. Below you can find
-            some useful information about the concepts explored in this app.
-            In the sidebar menu you can access the main sections of the dashboard:''')
+            some useful information about the different sections of this app, which you can
+            access in the sidebar menu.''')
     with st.expander('* Ticker Info'):
         st.markdown('''
                     This section has charts that provide an overall picture of the ticker prices and returns
                     in the past. 
-                * Close Price Chart 
-                * Returns Line Chart
-                * Returns Histogram 
+                * Candlestick Chart \n
+                    This chart provides information of open, high, low and close prices for the selected ticker.
+                * Returns Line Chart \n
+                    The returns line chart presents the daily returns calculated from the prices.
+                * Returns Histogram  \n
+                    The returns histogram helps us to understand the shape of the return distribution for the ticker,
+                    and compares it to the shape of a normal distribution.
                 * Shapiro-Wilk Normality Test \n
                     This statistical test calculates the confidence to which the returns distribution can be
                     approximated to a normal distribution. Usually a p-value lower than 0.05 is enough to the
@@ -30,7 +34,7 @@ def home():
                     have many properties that can be used in risk assessment.
                     ''')
         
-    with st.expander('* Model Backtest and Comparison'):
+    with st.expander('* VaR Model Analysis'):
         st.markdown('''
                 This section has charts that will help you backtest and visualize the estimated 
                 VaR using different models and parameters. It is a helpful tool to understand the
@@ -104,7 +108,7 @@ def ticker_info():
     st.text(f'P-value:{round(normality_test[1], 5)}')
 
 def model_comparison():
-    st.title('Model Comparison')
+    st.title('VaR Model Analysis')
 
     dict_tickers = {
         'S&P500':'^GSPC',
@@ -149,14 +153,14 @@ def model_comparison():
 def main():
     st.sidebar.title('Risk Analysis Dashboard')
     st.sidebar.markdown('---')
-    menu_list=['Home', 'Ticker Info', 'Model Comparison']
+    menu_list=['Home', 'Ticker Info', 'VaR Model Analysis']
     choice = st.sidebar.radio('Window', menu_list)
 
     if choice=='Home':
         home()
     if choice=='Ticker Info':
         ticker_info()
-    if choice=='Model Comparison':
+    if choice=='VaR Model Analysis':
         model_comparison()
 
 
