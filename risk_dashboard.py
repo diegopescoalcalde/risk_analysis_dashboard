@@ -62,7 +62,7 @@ def home():
                 
     with st.expander('Anomaly Detection'):
         st.markdown('''
-                Soon..
+                Soon...
                     ''')
                 
                 
