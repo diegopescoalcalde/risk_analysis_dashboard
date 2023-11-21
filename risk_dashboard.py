@@ -15,7 +15,7 @@ def home():
     st.markdown('''
             Thank you for accessing this simple risk analysis dashboard. Below you can find
             some useful information about the different sections of this app, which you can
-            access in the sidebar menu.''')
+            access in the sidebar menu. Charts are optimized for the desktop version.''')
     with st.expander('* Ticker Info'):
         st.markdown('''
                     This section has charts that provide an overall picture of the ticker prices and returns
@@ -61,12 +61,27 @@ def home():
                     The parameters to be defined are the confidence level and the number of lag terms (p,q) in the
                     function, but extensive research has proved that the best estimations are obtained in single
                     lag model, i.e. GARCH(1,1).
+
+                The first chart presents the calculated VaR for each model in every day of the backtested period.
+                The calculated VaR is plotted on top of the asset's historic returns so that you can visually
+                compare the real returns with the backtested VaR.
+                
+                The second chart plots the estimation error frequency for each model. This value is closely
+                related with the confidence level set, and is the frequency of days which the historical returns
+                exceeded the estimated VaR. A well defined model will obtain an estimation error frequency close to 5%
+                when the confidence level is set to 95%.
                 
             ''')
                 
     with st.expander('Anomaly Detection'):
         st.markdown('''
-                Soon...
+                An anomaly is an unusual or unexpected event or pattern in data. In the financial markets, anomalies
+                might include sudden spikes or drops in price, unusual trading volumes, or other unusual patterns
+                that deviate from the norm. Anomaly detection is the process of identifying these events
+                in data using statistical and mathematical methods. Detected anomalies can trigger many actions
+                such as trading operations to improve returns or minimize risks.
+                    
+                This feature will soon be available.
                     ''')
                 
                 

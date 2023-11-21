@@ -175,9 +175,9 @@ def plot_var(returns, var_list, error_list):
                     line=dict(color=colors[i])
                         ))
   
-  fig_percentage_error.update_layout(title="Error Percentage",
+  fig_percentage_error.update_layout(title="Estimation Error Frequency",
       xaxis_title="Date",
-      yaxis_title="Error Percentage (%)",
+      yaxis_title="Error Frequency (%)",
       legend=dict(title='Legend',
             orientation="h",
             yanchor="bottom",
