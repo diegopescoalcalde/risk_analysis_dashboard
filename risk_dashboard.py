@@ -93,12 +93,12 @@ def ticker_info():
                       yaxis_title='Price',
                       title=tickers, 
                       xaxis_rangeslider_visible=False)
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
     #st.plotly_chart(fig_close_prices)
-    st.plotly_chart(fig_returns_line)
-    st.plotly_chart(fig_returns_hist)
+    st.plotly_chart(fig_returns_line, use_container_width=True)
+    st.plotly_chart(fig_returns_hist, use_container_width=True)
     st.text('Shapiro-Wilk Normality Test Results')
     st.text(f'Test Statistic:{round(normality_test[0], 5)}')
     st.text(f'P-value:{round(normality_test[1], 5)}')
@@ -139,8 +139,8 @@ def model_comparison():
         #st.write(returns)
 
     returns, fig_percentage_error, fig_go = risk_functions.plot_var(returns, var_list=var_list, error_list=error_list)
-    st.plotly_chart(fig_go)
-    st.plotly_chart(fig_percentage_error)
+    st.plotly_chart(fig_go, use_container_width=True)
+    st.plotly_chart(fig_percentage_error, use_container_width=True)
 
         
 
