@@ -83,6 +83,9 @@ def home():
                     
                 This feature will soon be available.
                     ''')
+    
+    st.markdown('Developed by Diego Pesco Alcalde')
+    st.link_button("LinkedIn", "https://www.linkedin.com/in/diegopesco/")
                 
                 
 def ticker_info():
