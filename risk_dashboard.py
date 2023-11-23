@@ -101,29 +101,31 @@ def ticker_info():
     tickers = st.selectbox('Choose Ticker', tickers_options)
 
     st.markdown('Select area with mouse to zoom charts, click twice to zoom out.')
+    try:
+        yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
 
-    yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
+        fig = go.Figure(data=[go.Candlestick(x=yf_data.index,
+                                            open=yf_data['Open'],
+                                            high=yf_data['High'],
+                                            low=yf_data['Low'],
+                                            close=yf_data['Close'],
+                                            increasing_line_color= 'green', 
+                                            decreasing_line_color= 'red')])
+        fig.update_layout(xaxis_title='Date',
+                        yaxis_title='Price',
+                        title=tickers, 
+                        xaxis_rangeslider_visible=False)
+        st.plotly_chart(fig, use_container_width=True)
 
-    fig = go.Figure(data=[go.Candlestick(x=yf_data.index,
-                                         open=yf_data['Open'],
-                                         high=yf_data['High'],
-                                         low=yf_data['Low'],
-                                         close=yf_data['Close'],
-                                         increasing_line_color= 'green', 
-                                         decreasing_line_color= 'red')])
-    fig.update_layout(xaxis_title='Date',
-                      yaxis_title='Price',
-                      title=tickers, 
-                      xaxis_rangeslider_visible=False)
-    st.plotly_chart(fig, use_container_width=True)
-
-    returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
-    #st.plotly_chart(fig_close_prices)
-    st.plotly_chart(fig_returns_line, use_container_width=True)
-    st.plotly_chart(fig_returns_hist, use_container_width=True)
-    st.text('Shapiro-Wilk Normality Test Results')
-    st.text(f'Test Statistic:{round(normality_test[0], 5)}')
-    st.text(f'P-value:{round(normality_test[1], 5)}')
+        returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
+        #st.plotly_chart(fig_close_prices)
+        st.plotly_chart(fig_returns_line, use_container_width=True)
+        st.plotly_chart(fig_returns_hist, use_container_width=True)
+        st.text('Shapiro-Wilk Normality Test Results')
+        st.text(f'Test Statistic:{round(normality_test[0], 5)}')
+        st.text(f'P-value:{round(normality_test[1], 5)}')
+    except:
+        st.markdown('Please try reloading this page or try another ticker.')
 
 def model_comparison():
     st.title('VaR Model Analysis')
@@ -136,37 +138,36 @@ def model_comparison():
     tickers_options = ['S&P500', 'NASDAQ']
 
     tickers = st.selectbox('Choose Ticker', tickers_options)
+    try:
+        yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
+        returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
+        models = st.multiselect('Select Risk Models', ['Historical VaR', 'EWMA VaR', 'GARCH VaR'], ['EWMA VaR'])
+        var_list = []
+        error_list = []
+        confidence_level = st.number_input('Confidence Level', min_value=0.00, max_value=1.00, value=0.95)
+        if 'EWMA VaR' in models:
+            lambda_value = st.number_input('EWMA VaR - Decay Factor', min_value=0.00, max_value=1.00, value=0.94)
+            returns = risk_functions.compute_ewma_var(returns, lambda_value=lambda_value, time_horizon=1, confidence_level=confidence_level)
+            var_list.extend(['EWMA VaR', 'EWMA VaR - Negative Returns'])
+            error_list.extend(['EWMA VaR - Total Percentage Error', 'EWMA VaR - 365D Rolling Percentage Error'])
+        if 'Historical VaR' in models:
+            window = st.number_input('Historical VaR - Lookback Window (in Days)', min_value=1, max_value=2000, value=1095)
+            returns = risk_functions.calculate_historical_var(returns, window=window, confidence_level=confidence_level)
+            var_list.extend(['Historical VaR', 'Historical VaR - Negative Returns'])
+            error_list.extend(['Historical VaR - Total Percentage Error', 'Historical VaR - 365D Rolling Percentage Error'])
+        if 'GARCH VaR' in models:
+            model_results, garch_var, returns = risk_functions.compute_garch_var(returns, p=1, q=1, confidence_level=confidence_level)
+            #st.write(model_results.summary())
+            var_list.extend(['GARCH VaR', 'GARCH VaR - Negative Returns'])
+            error_list.extend(['GARCH VaR - Total Percentage Error', 'GARCH VaR - 365D Rolling Percentage Error'])
+            #st.write(returns)
 
-    yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
-    returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
-    models = st.multiselect('Select Risk Models', ['Historical VaR', 'EWMA VaR', 'GARCH VaR'], ['EWMA VaR'])
-    var_list = []
-    error_list = []
-    confidence_level = st.number_input('Confidence Level', min_value=0.00, max_value=1.00, value=0.95)
-    if 'EWMA VaR' in models:
-        lambda_value = st.number_input('Lambda Value', min_value=0.00, max_value=1.00, value=0.94)
-        returns = risk_functions.compute_ewma_var(returns, lambda_value=lambda_value, time_horizon=1, confidence_level=confidence_level)
-        var_list.extend(['EWMA VaR', 'EWMA VaR - Negative Returns'])
-        error_list.extend(['EWMA VaR - Total Percentage Error', 'EWMA VaR - 365D Rolling Percentage Error'])
-    if 'Historical VaR' in models:
-       window = st.number_input('Window Value in Days', min_value=1, max_value=2000, value=1095)
-       returns = risk_functions.calculate_historical_var(returns, window=window, confidence_level=confidence_level)
-       var_list.extend(['Historical VaR', 'Historical VaR - Negative Returns'])
-       error_list.extend(['Historical VaR - Total Percentage Error', 'Historical VaR - 365D Rolling Percentage Error'])
-    if 'GARCH VaR' in models:
-        model_results, garch_var, returns = risk_functions.compute_garch_var(returns, p=1, q=1, confidence_level=confidence_level)
-        #st.write(model_results.summary())
-        var_list.extend(['GARCH VaR', 'GARCH VaR - Negative Returns'])
-        error_list.extend(['GARCH VaR - Total Percentage Error', 'GARCH VaR - 365D Rolling Percentage Error'])
-        #st.write(returns)
-
-    returns, fig_percentage_error, fig_go = risk_functions.plot_var(returns, var_list=var_list, error_list=error_list)
-    st.plotly_chart(fig_go, use_container_width=True)
-    st.plotly_chart(fig_percentage_error, use_container_width=True)
-
+        returns, fig_percentage_error, fig_go = risk_functions.plot_var(returns, var_list=var_list, error_list=error_list)
+        st.plotly_chart(fig_go, use_container_width=True)
+        st.plotly_chart(fig_percentage_error, use_container_width=True)
+    except:
+        st.markdown('Please try reloading this page or try another ticker.')
         
-
-
 
 def main():
     st.sidebar.title('Risk Analysis Dashboard')

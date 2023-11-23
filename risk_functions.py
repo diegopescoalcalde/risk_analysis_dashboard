@@ -155,6 +155,7 @@ def plot_var(returns, var_list, error_list):
   fig_go.update_layout(title="Predicted VaR x Actual Returns",
       xaxis_title="Date",
       yaxis_title="Returns",
+      autosize=True,
       legend=dict(title='Legend',
             orientation="h",
             yanchor="bottom",
