@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import shapiro, norm
 import arch
+from prophet import Prophet
 
 
 def compute_returns(tickers, close_prices):
@@ -58,6 +59,7 @@ def compute_returns(tickers, close_prices):
 
   fig_returns_hist.update_layout(title=f"{tickers} Returns Distribution",
       xaxis_title="Returns",
+      autosize=True,
       legend=dict(title='Legend',
             orientation="h",
             yanchor="bottom",
@@ -189,3 +191,50 @@ def plot_var(returns, var_list, error_list):
 
 
   return returns, fig_percentage_error, fig_go
+
+def anomaly(df, column, interval_width):
+    # Create columns ds and y and fit prophet model
+    df['ds'] = df.index.copy()
+    df['y'] = df[column].copy()
+    model = Prophet(interval_width=interval_width, yearly_seasonality=True, weekly_seasonality=True)
+    model.fit(df)
+    forecast = model.predict(df)
+
+    # Combine existing dataframe with forecasted one
+    df = pd.merge(df, forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']], on='ds')
+
+    # Identify anomalies in boolean column
+    df['Anomaly'] = df.apply(lambda rows: True if ((rows.y<rows.yhat_lower)|(rows.y>rows.yhat_upper)) else False, axis = 1)
+
+    # Set date index
+    df.set_index('ds', inplace=True)
+
+    # Create figure
+    fig_anomaly = go.Figure()
+    fig_anomaly.add_trace(go.Scatter(
+        x=df[df['Anomaly'] == False].index,
+        y=df[df['Anomaly'] == False][column],
+        mode='markers',
+        name='Normal',
+        line=dict(color='blue')
+            ))
+    fig_anomaly.add_trace(go.Scatter(
+        x=df[df['Anomaly'] == True].index,
+        y=df[df['Anomaly'] == True][column],
+        mode='markers',
+        name='Anomaly',
+        line=dict(color='red')
+            ))
+    fig_anomaly.update_layout(title=f"Anomaly Detection - {column}",
+    xaxis_title="Date",
+    yaxis_title=column,
+    autosize=True,
+    legend=dict(title='Legend',
+            orientation="h",
+            yanchor="bottom",
+            y=-0.7,
+            xanchor="left",
+            x=0.01
+            ))
+    
+    return df, fig_anomaly

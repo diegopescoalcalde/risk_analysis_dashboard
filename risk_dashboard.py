@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import shapiro, norm
 import risk_functions
+from prophet import Prophet
 
 
 
@@ -13,8 +14,11 @@ def home():
     st.title('Home')
     st.header('Welcome! Please read me!')
     st.markdown('''
-            Thank you for accessing this simple risk analysis dashboard. Below you can find
-            some useful information about the different sections of this app, which you can
+            Thank you for accessing this simple risk analysis dashboard. The objective of this application is to facilitate
+            the understanding of basic market risk tools and models, using real data and interactive charts. This is not
+            an input for real trading, please don't use it for this purpose. 
+                
+            Below you can find some useful information about the different sections of this app, which you can
             access in the sidebar menu. Charts are optimized for the desktop version.''')
     with st.expander('* Ticker Info'):
         st.markdown('''
@@ -76,12 +80,16 @@ def home():
     with st.expander('Anomaly Detection'):
         st.markdown('''
                 An anomaly is an unusual or unexpected event or pattern in data. In the financial markets, anomalies
-                might include sudden spikes or drops in price, unusual trading volumes, or other unusual patterns
-                that deviate from the norm. Anomaly detection is the process of identifying these events
+                might include sudden spikes or drops in price, unusual trading volumes, or other events
+                that deviate from previous patterns. Anomaly detection is the process of identifying these events
                 in data using statistical and mathematical methods. Detected anomalies can trigger many actions
                 such as trading operations to improve returns or minimize risks.
-                    
-                This feature will soon be available.
+
+                Depending on the model that is used, different parameters must be established, but most of them
+                are related to the sensitiveness of the model, i.e. how significant must the deviation be to
+                be categorized as an anomaly. In this application that parameter will be the Interval Width,
+                which can be interpreted as a confidence level. The higher the confidence level required, the
+                lower the quantity of data points flagged as anomalies.
                     ''')
     
     st.markdown('Developed by Diego Pesco Alcalde')
@@ -122,8 +130,8 @@ def ticker_info():
         st.plotly_chart(fig_returns_line, use_container_width=True)
         st.plotly_chart(fig_returns_hist, use_container_width=True)
         st.text('Shapiro-Wilk Normality Test Results')
-        st.text(f'Test Statistic:{round(normality_test[0], 5)}')
-        st.text(f'P-value:{round(normality_test[1], 5)}')
+        st.markdown(f'Test Statistic: {round(normality_test[0], 5)}')
+        st.markdown(f'P-value: {round(normality_test[1], 4):4f}')
     except:
         st.markdown('Please try reloading this page or try another ticker.')
 
@@ -167,12 +175,44 @@ def model_comparison():
         st.plotly_chart(fig_percentage_error, use_container_width=True)
     except:
         st.markdown('Please try reloading this page or try another ticker.')
+
+def anomaly_detection():
+    st.title('Anomaly Detection')
+
+    dict_tickers = {
+        'S&P500':'^GSPC',
+        'NASDAQ':'^IXIC'
+    }
+
+    tickers_options = ['S&P500', 'NASDAQ']
+
+    tickers = st.selectbox('Choose Ticker', tickers_options)
+
+    try:
+        yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
+        interval_width = st.number_input('Interval Width', min_value=0.00, max_value=1.00, value=0.90)
+        volume = yf_data[['Volume']].copy()
+        returns = yf_data[['Close']].pct_change().dropna()
+        returns.columns = ['Returns']
+
+        volume, fig_volume = risk_functions.anomaly(df=volume, column='Volume', interval_width=interval_width)
+        st.plotly_chart(fig_volume, use_container_width=True)
+
+        returns, fig_returns = risk_functions.anomaly(df=returns, column='Returns', interval_width=interval_width)
+        st.plotly_chart(fig_returns, use_container_width=True)
+
+        #percentage_anomaly = volume['Anomaly'].sum()/volume['Anomaly'].count()
+        #st.text(percentage_anomaly)
+
+    except Exception as error:
+        st.markdown('Please try reloading this page or try another ticker.')
+        print(error)
         
 
 def main():
     st.sidebar.title('Risk Analysis Dashboard')
     st.sidebar.markdown('---')
-    menu_list=['Home', 'Ticker Info', 'VaR Model Analysis']
+    menu_list=['Home', 'Ticker Info', 'VaR Model Analysis', 'Anomaly Detection']
     choice = st.sidebar.radio('Window', menu_list)
 
     if choice=='Home':
@@ -181,6 +221,8 @@ def main():
         ticker_info()
     if choice=='VaR Model Analysis':
         model_comparison()
+    if choice=='Anomaly Detection':
+        anomaly_detection()
 
 
 main()
