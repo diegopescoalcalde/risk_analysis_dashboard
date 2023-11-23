@@ -157,11 +157,12 @@ def portfolio():
 
     tickers = st.multiselect('Choose Tickers to Build Portfolio', tickers_options, 'S&P500')
     try:
-        weights, tickers_df, fig_volatility = risk_functions.portfolio_analysis(tickers, dict_tickers)
+        weights, tickers_df, compounded_returns, fig_volatility, fig_returns = risk_functions.portfolio_analysis(tickers, dict_tickers)
         st.markdown('**Portfolio Weights**')    
         st.dataframe(weights, hide_index=True)
-        st.plotly_chart(fig_volatility)
-
+        st.plotly_chart(fig_returns, use_container_width=True)
+        st.plotly_chart(fig_volatility, use_container_width=True)
+        
     except Exception as e:
         st.markdown('Please try reloading this page or try another ticker.')
         print(e)

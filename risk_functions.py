@@ -255,39 +255,37 @@ def portfolio_analysis(tickers, dict_tickers):
     weights = np.ones(shape=len(tickers))
     weights = weights/weights.sum()
 
-    # Calculate Covariance Matrix of Asset Returns
-    covariance_matrix = tickers_df.cov()
-
-    # Calculate expected Portfolio Variance and volatility
-    portfolio_variance = np.dot(weights.T, np.dot(covariance_matrix, weights))
-    portfolio_volatility = np.sqrt(portfolio_variance)
-
     # Calculate Portfolio Returns
-    tickers_df['Portfolio Return'] = tickers_df.mean(axis=1)
+    tickers_df['Portfolio'] = tickers_df.mean(axis=1)
+
+    compounded_returns = tickers_df.copy()
+    compounded_returns = (1+compounded_returns).cumprod()
+    fig_returns = px.line(compounded_returns,
+                          x=compounded_returns.index,
+                          y=compounded_returns.columns,
+                          color_discrete_sequence=px.colors.qualitative.G10)
+    
+    fig_returns.update_layout(title="Portfolio Normalized Compounded Return",
+        xaxis_title="Date",
+        yaxis_title="Normalized Compounded Return",
+        autosize=True,
+        legend=dict(title='Legend',
+                orientation="h",
+                yanchor="bottom",
+                y=-0.7,
+                xanchor="left",
+                x=0.01
+                ))
 
     # Calculate Portfolio Volatility from returns
-    tickers_df['365D Rolling Portfolio Volatility'] = tickers_df['Portfolio Return'].rolling('365D', min_periods=1).std()
-
-    # Create figure with volatility
-    fig_volatility = go.Figure()
-    colors=px.colors.qualitative.G10
-    fig_volatility.add_trace(go.Scatter(
-                        x=tickers_df.index,
-                        y=tickers_df[f'365D Rolling Portfolio Volatility'],
-                        name=f'365D Rolling Portfolio Volatility',
-                        line=dict(color=colors[0])
-                            ))
-
-    for i, ticker in enumerate(tickers):
-        tickers_df[f'365D Rolling {ticker} Volatility'] = tickers_df[ticker].rolling('365D', min_periods=1).std()
-        fig_volatility.add_trace(go.Scatter(
-                        x=tickers_df.index,
-                        y=tickers_df[f'365D Rolling {ticker} Volatility'],
-                        name=f'365D Rolling {ticker} Volatility',
-                        line=dict(color=colors[i+1])
-                            ))
+    portfolio_volatility = tickers_df.rolling('365D', min_periods=1).std()
         
-    fig_volatility.update_layout(title="Portfolio Volatility",
+    fig_volatility = px.line(portfolio_volatility,
+                          x=portfolio_volatility.index,
+                          y=portfolio_volatility.columns,
+                          color_discrete_sequence=px.colors.qualitative.G10)
+        
+    fig_volatility.update_layout(title="365D Rolling Portfolio Volatility",
         xaxis_title="Date",
         yaxis_title="Volatility",
         autosize=True,
@@ -303,4 +301,4 @@ def portfolio_analysis(tickers, dict_tickers):
     weights = weights.transpose()
     weights.columns = tickers
 
-    return weights, tickers_df, fig_volatility
+    return weights, tickers_df, compounded_returns, fig_volatility, fig_returns
