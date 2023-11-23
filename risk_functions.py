@@ -238,3 +238,69 @@ def anomaly(df, column, interval_width):
             ))
     
     return df, fig_anomaly
+
+def portfolio_analysis(tickers, dict_tickers):
+    tickers_df=None
+
+    for ticker in tickers:
+        yf_data = yf.download(dict_tickers[ticker], period='5y', interval='1d')
+        yf_data = yf_data[['Close']].pct_change().dropna()
+        yf_data.columns = [ticker]
+        if tickers_df is None:
+            tickers_df = yf_data.copy()
+        else:
+            tickers_df = tickers_df.merge(yf_data, left_index=True, right_index=True)
+    
+    # Define equal weights
+    weights = np.ones(shape=len(tickers))
+    weights = weights/weights.sum()
+
+    # Calculate Covariance Matrix of Asset Returns
+    covariance_matrix = tickers_df.cov()
+
+    # Calculate expected Portfolio Variance and volatility
+    portfolio_variance = np.dot(weights.T, np.dot(covariance_matrix, weights))
+    portfolio_volatility = np.sqrt(portfolio_variance)
+
+    # Calculate Portfolio Returns
+    tickers_df['Portfolio Return'] = tickers_df.mean(axis=1)
+
+    # Calculate Portfolio Volatility from returns
+    tickers_df['365D Rolling Portfolio Volatility'] = tickers_df['Portfolio Return'].rolling('365D', min_periods=1).std()
+
+    # Create figure with volatility
+    fig_volatility = go.Figure()
+    colors=px.colors.qualitative.G10
+    fig_volatility.add_trace(go.Scatter(
+                        x=tickers_df.index,
+                        y=tickers_df[f'365D Rolling Portfolio Volatility'],
+                        name=f'365D Rolling Portfolio Volatility',
+                        line=dict(color=colors[0])
+                            ))
+
+    for i, ticker in enumerate(tickers):
+        tickers_df[f'365D Rolling {ticker} Volatility'] = tickers_df[ticker].rolling('365D', min_periods=1).std()
+        fig_volatility.add_trace(go.Scatter(
+                        x=tickers_df.index,
+                        y=tickers_df[f'365D Rolling {ticker} Volatility'],
+                        name=f'365D Rolling {ticker} Volatility',
+                        line=dict(color=colors[i+1])
+                            ))
+        
+    fig_volatility.update_layout(title="Portfolio Volatility",
+        xaxis_title="Date",
+        yaxis_title="Volatility",
+        autosize=True,
+        legend=dict(title='Legend',
+                orientation="h",
+                yanchor="bottom",
+                y=-0.7,
+                xanchor="left",
+                x=0.01
+                ))
+    
+    weights = pd.DataFrame(weights)
+    weights = weights.transpose()
+    weights.columns = tickers
+
+    return weights, tickers_df, fig_volatility

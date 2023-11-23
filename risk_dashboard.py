@@ -38,6 +38,13 @@ def home():
                     have many properties that can be used in risk assessment.
                     ''')
         
+    with st.expander('* Portfolio Analysis'):
+        st.markdown('''
+                    This section calculates the volatility of an equal weight portfolio composed of two or more assets.
+                    It is based on Markowitz's Modern Portfolio Theory, which assumes that diversification is helpful
+                    in reducing volatility when the selected assets have small values of covariance.
+                    ''')
+        
     with st.expander('* VaR Model Analysis'):
         st.markdown('''
                 This section has charts that will help you backtest and visualize the estimated 
@@ -135,6 +142,33 @@ def ticker_info():
     except:
         st.markdown('Please try reloading this page or try another ticker.')
 
+def portfolio():
+    st.title('Portfolio Analysis')
+    dict_tickers = {
+        'S&P500':'^GSPC',
+        'NASDAQ':'^IXIC',
+        'USD/BRL':'BRL=X',
+        'Gold':'GC=F',
+        'BTC/USD':'BTC-USD',
+        'MCHI':'MCHI'
+    }
+
+    tickers_options = ['S&P500', 'NASDAQ', 'USD/BRL', 'Gold', 'BTC/USD', 'MCHI']
+
+    tickers = st.multiselect('Choose Tickers to Build Portfolio', tickers_options, 'S&P500')
+    try:
+        weights, tickers_df, fig_volatility = risk_functions.portfolio_analysis(tickers, dict_tickers)
+        st.markdown('**Portfolio Weights**')    
+        st.dataframe(weights, hide_index=True)
+        st.plotly_chart(fig_volatility)
+
+    except Exception as e:
+        st.markdown('Please try reloading this page or try another ticker.')
+        print(e)
+
+
+
+
 def model_comparison():
     st.title('VaR Model Analysis')
 
@@ -212,13 +246,15 @@ def anomaly_detection():
 def main():
     st.sidebar.title('Risk Analysis Dashboard')
     st.sidebar.markdown('---')
-    menu_list=['Home', 'Ticker Info', 'VaR Model Analysis', 'Anomaly Detection']
+    menu_list=['Home', 'Ticker Info', 'Portfolio Analysis', 'VaR Model Analysis', 'Anomaly Detection']
     choice = st.sidebar.radio('Window', menu_list)
 
     if choice=='Home':
         home()
     if choice=='Ticker Info':
         ticker_info()
+    if choice=='Portfolio Analysis':
+        portfolio()
     if choice=='VaR Model Analysis':
         model_comparison()
     if choice=='Anomaly Detection':
