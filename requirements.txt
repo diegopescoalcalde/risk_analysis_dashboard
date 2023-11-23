@@ -5,3 +5,4 @@ streamlit
 arch
 yfinance
 plotly
+prophet
