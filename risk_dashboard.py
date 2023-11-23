@@ -40,9 +40,10 @@ def home():
         
     with st.expander('* Portfolio Analysis'):
         st.markdown('''
-                    This section calculates the volatility of an equal weight portfolio composed of two or more assets.
-                    It is based on Markowitz's Modern Portfolio Theory, which assumes that diversification is helpful
-                    in reducing volatility when the selected assets have small values of covariance.
+                    This section calculates the compounded return and volatility of an equal weight portfolio composed
+                    of two or more assets. The results help to visualize the main message of Markowitz's Modern Portfolio Theory, 
+                    which is that diversification is helpful in reducing volatility while keeping moderate returns 
+                    when the selected assets have small values of covariance.
                     ''')
         
     with st.expander('* VaR Model Analysis'):
@@ -101,49 +102,18 @@ def home():
     
     st.markdown('Developed by Diego Pesco Alcalde')
     st.link_button("LinkedIn", "https://www.linkedin.com/in/diegopesco/")
-                
+
+
+
+#------------------------------------------------------------------------------------
+
+
                 
 def ticker_info():
     st.title('Ticker Info')
 
-    dict_tickers = {
-        'S&P500':'^GSPC',
-        'NASDAQ':'^IXIC'
-    }
-
-    tickers_options = ['S&P500', 'NASDAQ']
-
-    tickers = st.selectbox('Choose Ticker', tickers_options)
-
-    st.markdown('Select area with mouse to zoom charts, click twice to zoom out.')
-    try:
-        yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
-
-        fig = go.Figure(data=[go.Candlestick(x=yf_data.index,
-                                            open=yf_data['Open'],
-                                            high=yf_data['High'],
-                                            low=yf_data['Low'],
-                                            close=yf_data['Close'],
-                                            increasing_line_color= 'green', 
-                                            decreasing_line_color= 'red')])
-        fig.update_layout(xaxis_title='Date',
-                        yaxis_title='Price',
-                        title=tickers, 
-                        xaxis_rangeslider_visible=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-        returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
-        #st.plotly_chart(fig_close_prices)
-        st.plotly_chart(fig_returns_line, use_container_width=True)
-        st.plotly_chart(fig_returns_hist, use_container_width=True)
-        st.text('Shapiro-Wilk Normality Test Results')
-        st.markdown(f'Test Statistic: {round(normality_test[0], 5)}')
-        st.markdown(f'P-value: {round(normality_test[1], 4):4f}')
-    except:
-        st.markdown('Please try reloading this page or try another ticker.')
-
-def portfolio():
-    st.title('Portfolio Analysis')
+    # Define tickers options and present to user
+    tickers_options = ['S&P500', 'NASDAQ', 'USD/BRL', 'Gold', 'BTC/USD', 'MCHI']
     dict_tickers = {
         'S&P500':'^GSPC',
         'NASDAQ':'^IXIC',
@@ -153,11 +123,51 @@ def portfolio():
         'MCHI':'MCHI'
     }
 
+    tickers = st.selectbox('Choose Ticker', tickers_options)
+    st.markdown('Select area with mouse to zoom charts, click twice to zoom out.')
+    
+    try:
+        # Retrieve data and charts from ticker
+        returns, fig_candlesticks, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, dict_tickers)
+
+        # Plot charts and results
+        st.plotly_chart(fig_candlesticks, use_container_width=True)
+        st.plotly_chart(fig_returns_line, use_container_width=True)
+        st.plotly_chart(fig_returns_hist, use_container_width=True)
+        st.text('Shapiro-Wilk Normality Test Results')
+        st.markdown(f'Test Statistic: {round(normality_test[0], 5)}')
+        st.markdown(f'P-value: {round(normality_test[1], 4):4f}')
+    except Exception as e:
+        st.markdown('Please try reloading this page or try another ticker.')
+        print(e)
+
+
+
+#------------------------------------------------------------------------------------
+
+
+
+def portfolio():
+    st.title('Portfolio Analysis')
+
+    # Define tickers options and present to user
     tickers_options = ['S&P500', 'NASDAQ', 'USD/BRL', 'Gold', 'BTC/USD', 'MCHI']
+    dict_tickers = {
+        'S&P500':'^GSPC',
+        'NASDAQ':'^IXIC',
+        'USD/BRL':'BRL=X',
+        'Gold':'GC=F',
+        'BTC/USD':'BTC-USD',
+        'MCHI':'MCHI'
+    }
 
     tickers = st.multiselect('Choose Tickers to Build Portfolio', tickers_options, 'S&P500')
+    
     try:
+        # Retrieve data and charts from portfolio
         weights, tickers_df, compounded_returns, fig_volatility, fig_returns = risk_functions.portfolio_analysis(tickers, dict_tickers)
+        
+        # Plot charts and data
         st.markdown('**Portfolio Weights**')    
         st.dataframe(weights, hide_index=True)
         st.plotly_chart(fig_returns, use_container_width=True)
@@ -169,25 +179,37 @@ def portfolio():
 
 
 
+#------------------------------------------------------------------------------------
+
+
 
 def model_comparison():
     st.title('VaR Model Analysis')
 
+    # Define tickers options and present to user
+    tickers_options = ['S&P500', 'NASDAQ', 'USD/BRL', 'Gold', 'BTC/USD', 'MCHI']
     dict_tickers = {
         'S&P500':'^GSPC',
-        'NASDAQ':'^IXIC'
+        'NASDAQ':'^IXIC',
+        'USD/BRL':'BRL=X',
+        'Gold':'GC=F',
+        'BTC/USD':'BTC-USD',
+        'MCHI':'MCHI'
     }
 
-    tickers_options = ['S&P500', 'NASDAQ']
-
     tickers = st.selectbox('Choose Ticker', tickers_options)
+
     try:
-        yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
-        returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, pd.DataFrame(yf_data['Close']))
+        # Retrieve data from ticker
+        returns, fig_candlesticks, fig_returns_line, fig_returns_hist, normality_test = risk_functions.compute_returns(tickers, dict_tickers)
+        
+        # Request user model choice and confidence level
         models = st.multiselect('Select Risk Models', ['Historical VaR', 'EWMA VaR', 'GARCH VaR'], ['EWMA VaR'])
         var_list = []
         error_list = []
         confidence_level = st.number_input('Confidence Level', min_value=0.00, max_value=1.00, value=0.95)
+
+        # Retrieve model results according to the input
         if 'EWMA VaR' in models:
             lambda_value = st.number_input('EWMA VaR - Decay Factor', min_value=0.00, max_value=1.00, value=0.94)
             returns = risk_functions.compute_ewma_var(returns, lambda_value=lambda_value, time_horizon=1, confidence_level=confidence_level)
@@ -200,34 +222,44 @@ def model_comparison():
             error_list.extend(['Historical VaR - Total Percentage Error', 'Historical VaR - 365D Rolling Percentage Error'])
         if 'GARCH VaR' in models:
             model_results, garch_var, returns = risk_functions.compute_garch_var(returns, p=1, q=1, confidence_level=confidence_level)
-            #st.write(model_results.summary())
             var_list.extend(['GARCH VaR', 'GARCH VaR - Negative Returns'])
             error_list.extend(['GARCH VaR - Total Percentage Error', 'GARCH VaR - 365D Rolling Percentage Error'])
-            #st.write(returns)
 
+        # Retrieve charts and plot to user
         returns, fig_percentage_error, fig_go = risk_functions.plot_var(returns, var_list=var_list, error_list=error_list)
         st.plotly_chart(fig_go, use_container_width=True)
         st.plotly_chart(fig_percentage_error, use_container_width=True)
-    except:
+    except Exception as e:
         st.markdown('Please try reloading this page or try another ticker.')
+        print(e)
+
+
+
+#------------------------------------------------------------------------------------
+
+
 
 def anomaly_detection():
     st.title('Anomaly Detection')
 
+    # Define tickers options and present to user
+    tickers_options = ['S&P500', 'NASDAQ', 'USD/BRL', 'Gold', 'BTC/USD', 'MCHI']
     dict_tickers = {
         'S&P500':'^GSPC',
-        'NASDAQ':'^IXIC'
+        'NASDAQ':'^IXIC',
+        'USD/BRL':'BRL=X',
+        'Gold':'GC=F',
+        'BTC/USD':'BTC-USD',
+        'MCHI':'MCHI'
     }
 
-    tickers_options = ['S&P500', 'NASDAQ']
-
     tickers = st.selectbox('Choose Ticker', tickers_options)
+    interval_width = st.number_input('Interval Width', min_value=0.00, max_value=1.00, value=0.90)
 
     try:
         yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
-        interval_width = st.number_input('Interval Width', min_value=0.00, max_value=1.00, value=0.90)
         volume = yf_data[['Volume']].copy()
-        returns = yf_data[['Close']].pct_change().dropna()
+        returns = yf_data[['Adj Close']].pct_change().dropna()
         returns.columns = ['Returns']
 
         volume, fig_volume = risk_functions.anomaly(df=volume, column='Volume', interval_width=interval_width)
@@ -236,13 +268,16 @@ def anomaly_detection():
         returns, fig_returns = risk_functions.anomaly(df=returns, column='Returns', interval_width=interval_width)
         st.plotly_chart(fig_returns, use_container_width=True)
 
-        #percentage_anomaly = volume['Anomaly'].sum()/volume['Anomaly'].count()
-        #st.text(percentage_anomaly)
 
     except Exception as error:
         st.markdown('Please try reloading this page or try another ticker.')
         print(error)
-        
+
+
+
+#------------------------------------------------------------------------------------
+
+
 
 def main():
     st.sidebar.title('Risk Analysis Dashboard')

@@ -9,29 +9,26 @@ import arch
 from prophet import Prophet
 
 
-def compute_returns(tickers, close_prices):
-  returns = close_prices.pct_change().dropna()
+def compute_returns(tickers, dict_tickers):
+  yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
+  returns = yf_data[['Adj Close']].pct_change().dropna()
   returns.columns = ['Returns']
 
   # Calculate normal distribution with same mean and std as the returns
   returns['Normal Distribution'] = np.random.normal(loc=returns['Returns'].mean(), scale=returns['Returns'].std(), size=len(returns))
 
-  # Line plot close prices
-  fig_close_prices = px.line(close_prices,
-            x=close_prices.index,
-            y=['Close'],
-            color_discrete_sequence=px.colors.qualitative.G10)
-
-  fig_close_prices.update_layout(title=f"{tickers} Close Price",
-      xaxis_title="Date",
-      yaxis_title="Close Price",
-      legend=dict(title='Legend',
-            orientation="h",
-            yanchor="bottom",
-            y=-0.7,
-            xanchor="left",
-            x=0.01
-            ))
+  # Candlestick chart
+  fig_candlesticks = go.Figure(data=[go.Candlestick(x=yf_data.index,
+                                            open=yf_data['Open'],
+                                            high=yf_data['High'],
+                                            low=yf_data['Low'],
+                                            close=yf_data['Close'],
+                                            increasing_line_color= 'green', 
+                                            decreasing_line_color= 'red')])
+  fig_candlesticks.update_layout(xaxis_title='Date',
+                yaxis_title='Price',
+                title=tickers, 
+                xaxis_rangeslider_visible=False)
 
 
   # Line plot returns
@@ -72,7 +69,13 @@ def compute_returns(tickers, close_prices):
   normality_test = shapiro(returns)
 
 
-  return returns, fig_close_prices, fig_returns_line, fig_returns_hist, normality_test
+  return returns, fig_candlesticks, fig_returns_line, fig_returns_hist, normality_test
+
+
+
+#------------------------------------------------------------------------------------
+
+
 
 def calculate_historical_var(df_returns, window, confidence_level, min_periods=1):
   risk_percentile = (1-confidence_level)/2
@@ -84,6 +87,12 @@ def calculate_historical_var(df_returns, window, confidence_level, min_periods=1
   df_returns['Historical VaR - 365D Rolling Percentage Error'] = df_returns['Actual > Predicted'].rolling('365D').sum()*100 / df_returns['Actual > Predicted'].rolling('365D').count()
   
   return df_returns
+
+
+
+#------------------------------------------------------------------------------------
+
+
 
 def compute_ewma_var(returns, lambda_value, time_horizon, confidence_level):
   risk_percentile = 1-((1-confidence_level)/2)
@@ -109,6 +118,12 @@ def compute_ewma_var(returns, lambda_value, time_horizon, confidence_level):
 
   return returns
 
+
+
+#------------------------------------------------------------------------------------
+
+
+
 def compute_garch_var(returns, p, q, confidence_level):
    # Fit model
    model = arch.arch_model(returns['Returns'], mean='Constant', vol='GARCH', p=p, q=q)
@@ -130,8 +145,12 @@ def compute_garch_var(returns, p, q, confidence_level):
    returns['GARCH VaR - Total Percentage Error'] = returns['Actual > Predicted'].expanding().sum()*100 / returns['Actual > Predicted'].expanding().count()
    returns['GARCH VaR - 365D Rolling Percentage Error'] = returns['Actual > Predicted'].rolling('365D').sum()*100 / returns['Actual > Predicted'].rolling('365D').count()
 
-
    return model_results, garch_var, returns
+
+
+
+#------------------------------------------------------------------------------------
+
 
 
 def plot_var(returns, var_list, error_list):
@@ -192,6 +211,12 @@ def plot_var(returns, var_list, error_list):
 
   return returns, fig_percentage_error, fig_go
 
+
+
+#------------------------------------------------------------------------------------
+
+
+
 def anomaly(df, column, interval_width):
     # Create columns ds and y and fit prophet model
     df['ds'] = df.index.copy()
@@ -239,12 +264,18 @@ def anomaly(df, column, interval_width):
     
     return df, fig_anomaly
 
+
+
+#------------------------------------------------------------------------------------
+
+
+
 def portfolio_analysis(tickers, dict_tickers):
     tickers_df=None
 
     for ticker in tickers:
         yf_data = yf.download(dict_tickers[ticker], period='5y', interval='1d')
-        yf_data = yf_data[['Close']].pct_change().dropna()
+        yf_data = yf_data[['Adj Close']].pct_change().dropna()
         yf_data.columns = [ticker]
         if tickers_df is None:
             tickers_df = yf_data.copy()
