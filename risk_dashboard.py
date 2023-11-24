@@ -11,7 +11,7 @@ from prophet import Prophet
 
 
 def home():
-    st.title('Home')
+    st.title('Risk Analysis Dashboard')
     st.header('Welcome! Please read me!')
     st.markdown('''
             Thank you for accessing this simple risk analysis dashboard. The objective of this application is to facilitate
@@ -286,6 +286,7 @@ def main():
     st.sidebar.markdown('---')
     menu_list=['Home', 'Ticker Info', 'Portfolio Analysis', 'VaR Model Analysis', 'Anomaly Detection']
     choice = st.sidebar.radio('Window', menu_list)
+
 
     if choice=='Home':
         home()
