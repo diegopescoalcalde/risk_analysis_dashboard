@@ -118,7 +118,7 @@ def ticker_info():
         'S&P500':'^GSPC',
         'NASDAQ':'^IXIC',
         'USD/BRL':'BRL=X',
-        'Gold':'GC=F',
+        'Gold':'GLD',
         'BTC/USD':'BTC-USD',
         'MCHI':'MCHI'
     }
@@ -156,13 +156,13 @@ def portfolio():
         'S&P500':'^GSPC',
         'NASDAQ':'^IXIC',
         'USD/BRL':'BRL=X',
-        'Gold':'GC=F',
+        'Gold':'GLD',
         'BTC/USD':'BTC-USD',
         'MCHI':'MCHI'
     }
 
     tickers = st.multiselect('Choose Tickers to Build Portfolio', tickers_options, 'S&P500')
-    
+    st.markdown('Select area with mouse to zoom charts, click twice to zoom out.')
     try:
         # Retrieve data and charts from portfolio
         weights, tickers_df, compounded_returns, fig_volatility, fig_returns = risk_functions.portfolio_analysis(tickers, dict_tickers)
@@ -192,12 +192,13 @@ def model_comparison():
         'S&P500':'^GSPC',
         'NASDAQ':'^IXIC',
         'USD/BRL':'BRL=X',
-        'Gold':'GC=F',
+        'Gold':'GLD',
         'BTC/USD':'BTC-USD',
         'MCHI':'MCHI'
     }
 
     tickers = st.selectbox('Choose Ticker', tickers_options)
+    st.markdown('Select area with mouse to zoom charts, click twice to zoom out.')
 
     try:
         # Retrieve data from ticker
@@ -248,13 +249,14 @@ def anomaly_detection():
         'S&P500':'^GSPC',
         'NASDAQ':'^IXIC',
         'USD/BRL':'BRL=X',
-        'Gold':'GC=F',
+        'Gold':'GLD',
         'BTC/USD':'BTC-USD',
         'MCHI':'MCHI'
     }
 
     tickers = st.selectbox('Choose Ticker', tickers_options)
     interval_width = st.number_input('Interval Width', min_value=0.00, max_value=1.00, value=0.90)
+    st.markdown('Select area with mouse to zoom charts, click twice to zoom out.')
 
     try:
         yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
