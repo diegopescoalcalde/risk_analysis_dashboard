@@ -260,8 +260,9 @@ def anomaly_detection():
 
     try:
         yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
+        yf_data.columns = yf_data.columns.droplevel(1)
         volume = yf_data[['Volume']].copy()
-        returns = yf_data[['Adj Close']].pct_change().dropna()
+        returns = yf_data[['Close']].pct_change().dropna()
         returns.columns = ['Returns']
 
         volume, fig_volume = risk_functions.anomaly(df=volume, column='Volume', interval_width=interval_width)

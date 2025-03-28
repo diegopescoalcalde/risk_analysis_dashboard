@@ -11,7 +11,8 @@ from prophet import Prophet
 
 def compute_returns(tickers, dict_tickers):
   yf_data = yf.download(dict_tickers[tickers], period='5y', interval='1d')
-  returns = yf_data[['Adj Close']].pct_change().dropna()
+  yf_data.columns = yf_data.columns.droplevel(1)
+  returns = yf_data[['Close']].pct_change().dropna()
   returns.columns = ['Returns']
 
   # Calculate normal distribution with same mean and std as the returns
@@ -275,7 +276,8 @@ def portfolio_analysis(tickers, dict_tickers):
 
     for ticker in tickers:
         yf_data = yf.download(dict_tickers[ticker], period='5y', interval='1d')
-        yf_data = yf_data[['Adj Close']].pct_change().dropna()
+        yf_data.columns = yf_data.columns.droplevel(1)
+        yf_data = yf_data[['Close']].pct_change().dropna()
         yf_data.columns = [ticker]
         if tickers_df is None:
             tickers_df = yf_data.copy()
